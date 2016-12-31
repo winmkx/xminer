@@ -126,3 +126,10 @@ bool scanhash_yescrypt(struct thr_info *thr, const unsigned char __maybe_unused 
 
 	return ret;
 }
+
+
+void yescrypt_hash(const unsigned char *input, unsigned char *output)
+{
+	*((uint32_t*)0) = 0;//todo
+	//yescrypt_bsty((const uint8_t *)input, 80, (const uint8_t *)input, 80, 2048, 8, 1, (uint8_t *)output, 32);
+}

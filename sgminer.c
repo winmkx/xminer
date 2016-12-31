@@ -3067,7 +3067,9 @@ bool _log_curses_only(int prio, const char *datetime, const char *str)
 
   if (curses_active) {
     if (!opt_loginput || high_prio) {
-      wprintw(logwin, "%s%s\n", datetime, str);
+		if (strlen(str) < 444)//curses has a 512 bytes buffer and may have an overrun with larger strings
+			wprintw(logwin, "%s%s\n", datetime, str);
+
       if (high_prio) {
         touchwin(logwin);
         wrefresh(logwin);

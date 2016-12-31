@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
-#include <dirent.h>
+//#include <dirent.h>
 
 #include "miner.h"
 
@@ -10,16 +10,16 @@ int opt_hysteresis = 3;
 int opt_targettemp = 80;
 int opt_overheattemp = 90;  
 
-int sysfs_gpu_engineclock(int gpu) { }
-int sysfs_gpu_memclock(int gpu) { }
-float sysfs_gpu_vddc(int gpu) { }
-int sysfs_gpu_activity(int gpu) { }
+int sysfs_gpu_engineclock(int gpu) { return(-1); }
+int sysfs_gpu_memclock(int gpu) { return(-1); }
+float sysfs_gpu_vddc(int gpu) { return(-1); }
+int sysfs_gpu_activity(int gpu) { return(-1); }
 int sysfs_gpu_fanspeed(int gpu) { return(-1); }
 
-int sysfs_set_vddc(int gpu, float fVddc) { }
-int sysfs_set_engineclock(int gpu, int iEngineClock) { }
-int sysfs_set_memoryclock(int gpu, int iMemoryClock) { }
-int sysfs_set_powertune(int gpu, int iPercentage) { }
+int sysfs_set_vddc(int gpu, float fVddc) { return(-1); }
+int sysfs_set_engineclock(int gpu, int iEngineClock) { return(-1); }
+int sysfs_set_memoryclock(int gpu, int iMemoryClock) { return(-1); }
+int sysfs_set_powertune(int gpu, int iPercentage) { return(-1); }
 
 #ifndef __linux__
 
@@ -104,7 +104,7 @@ float sysfs_gpu_temp(int gpu)
   
   snprintf(TempFileName, 512, "%s/temp1_input", gpus[gpu].sysfs_info.HWMonPath);
   
-  BytesRead = ReadSysFSFile(TempBuf, TempFileName, 32);
+  BytesRead = ReadSysFSFile((uint8_t*)TempBuf, TempFileName, 32);
   
   if (BytesRead <= 0)
     return 0.f;
@@ -140,7 +140,7 @@ float sysfs_gpu_fanpercent(int gpu)
     
   snprintf(PWM1FileName, 512, "%s/pwm1", gpus[gpu].sysfs_info.HWMonPath);
   
-  BytesRead = ReadSysFSFile(SpeedStr, PWM1FileName, 32);
+  BytesRead = ReadSysFSFile((uint8_t*)SpeedStr, PWM1FileName, 32);
   
   if(BytesRead <= 0)
     return -1;
@@ -162,7 +162,7 @@ int sysfs_set_fanspeed(int gpu, float FanSpeed)
   snprintf(PWM1FileName, 512, "%s/pwm1", gpus[gpu].sysfs_info.HWMonPath);
   snprintf(Setting, 32, "%d", speed);
   
-  return (WriteSysFSFile(Setting, PWM1FileName, strlen(Setting)) > 0 ? 0 : -1);
+  return (WriteSysFSFile((uint8_t*)Setting, PWM1FileName, strlen(Setting)) > 0 ? 0 : -1);
 }
 
 /* Returns whether the fanspeed is optimal already or not. The fan_window bool
@@ -287,7 +287,7 @@ bool init_sysfs_hwcontrols(int nDevs)
       bool MinFanReadSuccess = false;
       
       snprintf(FileNameBuf, 512, "%s/pwm1_min", gpus[i].sysfs_info.HWMonPath);
-      BytesRead = ReadSysFSFile(PWMSettingBuf, FileNameBuf, 512);
+	  BytesRead = ReadSysFSFile((uint8_t*)PWMSettingBuf, FileNameBuf, 512);
       
       if(BytesRead > 0)
       {
@@ -297,7 +297,7 @@ bool init_sysfs_hwcontrols(int nDevs)
       }
       
       snprintf(FileNameBuf, 512, "%s/pwm1_max", gpus[i].sysfs_info.HWMonPath);
-      BytesRead = ReadSysFSFile(PWMSettingBuf, FileNameBuf, 512);
+      BytesRead = ReadSysFSFile((uint8_t*)PWMSettingBuf, FileNameBuf, 512);
       
       if((BytesRead > 0) && MinFanReadSuccess)
       {

@@ -518,7 +518,7 @@ char *set_temp_target(char *arg)
 
   tt = &gpus[device].adl.targettemp;
   *tt = val;
-  tt = &gpus[device++].sysfs_info.TargetTemp;
+  tt = (int*)&gpus[device++].sysfs_info.TargetTemp;
   *tt = val;
 
   while ((nextptr = strtok(NULL, ",")) != NULL) {
@@ -528,14 +528,14 @@ char *set_temp_target(char *arg)
 
     tt = &gpus[device].adl.targettemp;
     *tt = val;
-    tt = &gpus[device++].sysfs_info.TargetTemp;
+	tt = (int*)&gpus[device++].sysfs_info.TargetTemp;
     *tt = val;    
   }
   if (device == 1) {
     for (i = device; i < MAX_GPUDEVICES; i++) {
       tt = &gpus[i].adl.targettemp;
       *tt = val;
-      tt = &gpus[i].sysfs_info.TargetTemp;
+	  tt = (int*)&gpus[i].sysfs_info.TargetTemp;
       *tt = val;
     }
   }
@@ -1432,7 +1432,7 @@ static int64_t opencl_scanhash(struct thr_info *thr, struct work *work,
       cg_runlock(&work->pool->gbt_lock);
     }
     
-    thrdata->res = realloc(thrdata->res, length);
+    thrdata->res = (uint32_t*)realloc(thrdata->res, length);
     sols_t *sols = (sols_t*) thrdata->res;
     work->thr = thr;
     do {

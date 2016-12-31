@@ -29,7 +29,7 @@ uint32_t EthCalcEpochNumber(uint8_t *SeedHash)
   uint8_t TestSeedHash[32] = { 0 };
   
   for(int Epoch = 0; Epoch < 2048; ++Epoch) {
-    SHA3_256(TestSeedHash, TestSeedHash, 32);
+    SHA3_256((const ethash_h256*)TestSeedHash, TestSeedHash, 32);
     if(!memcmp(TestSeedHash, SeedHash, 32)) return(Epoch + 1);
   }
   
@@ -62,7 +62,7 @@ Node CalcDAGItem(const Node *CacheInputNodes, uint32_t NodeCount, uint32_t NodeI
 }
 
 // OutHash & MixHash MUST have 32 bytes allocated (at least)
-void LightEthash(uint8_t *restrict OutHash, uint8_t *restrict MixHash, const uint8_t *restrict HeaderPoWHash, const Node *Cache, const uint64_t EpochNumber, const uint64_t Nonce)
+void LightEthash(uint8_t * OutHash, uint8_t * MixHash, const uint8_t * HeaderPoWHash, const Node *Cache, const uint64_t EpochNumber, const uint64_t Nonce)
 {
   uint32_t MixState[32], TmpBuf[24], NodeCount = EthGetCacheSize(EpochNumber) / sizeof(Node);
   uint64_t DagSize;
@@ -73,8 +73,8 @@ void LightEthash(uint8_t *restrict OutHash, uint8_t *restrict MixHash, const uin
   // later for the final hash, and is therefore saved.
   memcpy(TmpBuf, HeaderPoWHash, 32UL);
   memcpy(TmpBuf + 8UL, &Nonce, 8UL);
-  sha3_512((uint8_t *)TmpBuf, 64UL, (uint8_t *)TmpBuf, 40UL);
-  
+  SHA3_512((uint8_t *)TmpBuf, (uint8_t *)TmpBuf, 40UL);
+
   memcpy(MixState, TmpBuf, 64UL);
   
   // The other half of the state is filled by simply
@@ -108,7 +108,7 @@ void LightEthash(uint8_t *restrict OutHash, uint8_t *restrict MixHash, const uin
   
   // Hash the initial hash and the mix hash concatenated
   // to get the final proof-of-work hash that is our output.
-  sha3_256(OutHash, 32UL, (uint8_t *)TmpBuf, 96UL);
+  SHA3_256((const ethash_h256*)OutHash, (uint8_t *)TmpBuf, 96UL);
 }
 
 void ethash_regenhash(struct work *work)
@@ -116,7 +116,7 @@ void ethash_regenhash(struct work *work)
   work->Nonce += *((uint32_t *)(work->data + 32));
   applog(LOG_DEBUG, "Regenhash: First qword of input: 0x%016llX.", work->Nonce);
   cg_rlock(&work->pool->data_lock);
-  LightEthash(work->hash, work->mixhash, work->data, work->pool->eth_cache.dag_cache, work->eth_epoch, work->Nonce);
+  LightEthash(work->hash, work->mixhash, work->data, (const Node*)work->pool->eth_cache.dag_cache, work->eth_epoch, work->Nonce);
   cg_runlock(&work->pool->data_lock);
   
   char *DbgHash = bin2hex(work->hash, 32);

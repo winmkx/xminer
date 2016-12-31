@@ -1834,11 +1834,11 @@ bool parse_diff_ethash(char* Target, const char* TgtStr)
       memcpy(NewTgtStr + PadLen, TgtStr + offset, len - offset);
     
       NewTgtStr[64] = 0x00;
-      ret = hex2bin(Target, NewTgtStr, 32);
+      ret = hex2bin((unsigned char*)Target, NewTgtStr, 32);
     }
   }
   else
-    ret = hex2bin(Target, TgtStr + 2, 32) || hex2bin(Target, TgtStr, 32);
+	  ret = hex2bin((unsigned char*)Target, TgtStr + 2, 32) || hex2bin((unsigned char*)Target, TgtStr, 32);
   return ret;
 }
 
@@ -1880,9 +1880,9 @@ static bool parse_notify_ethash(struct pool *pool, json_t *val)
   
   ret &= hex2bin(SeedHash, SeedHashStr + 2, 32) || hex2bin(SeedHash, SeedHashStr, 32);
   
-  ret &= parse_diff_ethash(Target, TgtStr);
+  ret &= parse_diff_ethash((char*)Target, TgtStr);
   
-  if (!ret || (NetDiffStr != NULL && !parse_diff_ethash(NetDiff, NetDiffStr))) {
+  if (!ret || (NetDiffStr != NULL && !parse_diff_ethash((char*)NetDiff, NetDiffStr))) {
     ret = false;
     goto out;
   }
@@ -1944,7 +1944,6 @@ out:
 
 bool parse_notify_cn(struct pool *pool, json_t *val)
 {
-  char *job_id = NULL;
   bool clean;
   uint32_t XMRTarget;
   uint8_t XMRBlob[76];
@@ -1978,8 +1977,8 @@ bool parse_notify_cn(struct pool *pool, json_t *val)
     goto out;
   }
   
-  job_id = json_string_value(jid);
-  hex2bin(&XMRTarget, json_string_value(target), 4);
+  const char *job_id = job_id = json_string_value(jid);
+  hex2bin((unsigned char*)&XMRTarget, json_string_value(target), 4);
 
   cg_wlock(&pool->data_lock);
   
@@ -2057,7 +2056,8 @@ static bool parse_diff(struct pool *pool, json_t *val)
 
 static bool parse_target(struct pool *pool, json_t *val)
 {
-  uint8_t oldtarget[32], target[32], *str;
+  uint8_t oldtarget[32], target[32];
+  char *str;
 
   if ((str = json_array_string(val, 0)) == NULL) {
     applog(LOG_DEBUG, "parse_target: Missing an array value.");

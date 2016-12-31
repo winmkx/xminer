@@ -2024,7 +2024,7 @@ static bool __build_gbt_txns(struct pool *pool, json_t *res_val)
     quit(1, "Failed to calloc txn_hashes in __build_gbt_txns");
 
   if (pool->algorithm.type == ALGO_EQUIHASH) {
-    pool->coinbasetxn = realloc(pool->coinbasetxn, 1 << 22);  // reuse coinbasetxn
+    pool->coinbasetxn = (char*)realloc(pool->coinbasetxn, 1 << 22);  // reuse coinbasetxn
     size_t len = 0;
     for (i = 0; i < pool->gbt_txns; i++) {
       json_t *array_elem = json_array_get(txn_array, i);
@@ -2415,7 +2415,7 @@ static bool gbt_decode(struct pool *pool, json_t *res_val)
 /* truediffone == 0x00000000FFFF0000000000000000000000000000000000000000000000000000
  * Generate a 256 bit binary LE target by cutting up diff into 64 bit sized
  * portions or vice versa. */
-const double eth2pow256 = 115792089237316195423570985008687907853269984665640564039457584007913129639936.0;
+double eth2pow256 = 115792089237316195423570985008687907853269984665640564039457584007913129639936.0;
 const double truediffone = 26959535291011309493156476344723991336010898738574164086137773096960.0;
 const double bits192 = 6277101735386680763835789423207666416102355444464034512896.0;
 const double bits128 = 340282366920938463463374607431768211456.0;
@@ -2516,7 +2516,7 @@ static bool work_decode_eth(struct pool *pool, struct work *work, json_t *val, j
   int i;
   bool ret = false;
   uint8_t EthWork[32], SeedHash[32], Target[32];
-  const char *EthWorkStr, *SeedHashStr, *TgtStr, *BlockHeightStr, *NetDiffStr, FinalNetDiffStr[65];
+  const char *EthWorkStr, *SeedHashStr, *TgtStr, *BlockHeightStr, *NetDiffStr;
 
   cgtime(&pool->tv_lastwork);
 
@@ -2539,7 +2539,7 @@ static bool work_decode_eth(struct pool *pool, struct work *work, json_t *val, j
   if (!hex2bin(SeedHash, SeedHashStr + 2, 32))
     goto out;
 
-  if (!parse_diff_ethash(Target, TgtStr))
+  if (!parse_diff_ethash((char*)Target, TgtStr))
     goto out;
 
 	/*
@@ -3309,7 +3309,7 @@ static bool submit_upstream_work(struct work *work, CURL *curl, char *curl_err_s
 	  uint64_t tmp = bswap_64(work->Nonce);
 	  char *ASCIIMixHash = bin2hex(work->mixhash, 32);
 	  char *ASCIIPoWHash = bin2hex(work->data, 32);
-	  char *ASCIINonce = bin2hex(&tmp, 8);
+	  char *ASCIINonce = bin2hex((const unsigned char*)&tmp, 8);
 
 	  snprintf(s, 128 + 16 + 512, "{\"jsonrpc\":\"2.0\", \"method\":\"eth_submitWork\", \"params\":[\"0x%s\", \"0x%s\", \"0x%s\"],\"id\":1}", ASCIINonce, ASCIIPoWHash, ASCIIMixHash);
 
@@ -5971,7 +5971,7 @@ static void *stratum_sthread(void *userdata)
       uint64_t tmp = bswap_64(work->Nonce);
       char *ASCIIMixHash = bin2hex(work->mixhash, 32);
       char *ASCIIPoWHash = bin2hex(work->data, 32);
-      char *ASCIINonce = bin2hex(&tmp, 8);
+      char *ASCIINonce = bin2hex((const unsigned char*)&tmp, 8);
 
       mutex_lock(&sshare_lock);
       /* Give the stratum share a unique id */
@@ -5993,7 +5993,7 @@ static void *stratum_sthread(void *userdata)
 
       applog(LOG_DEBUG, "stratum_sthread() algorithm = %s", pool->algorithm.name);
 		
-      char *ASCIINonce = bin2hex(&work->XMRNonce, 4);
+	  char *ASCIINonce = bin2hex((const unsigned char*)&work->XMRNonce, 4);
       
       ASCIIResult = bin2hex(work->hash, 32);
        

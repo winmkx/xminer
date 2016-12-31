@@ -232,11 +232,11 @@ static inline void sort_pair(uint32_t *a, uint32_t len)
 
 bool submit_tested_work(struct thr_info *, struct work *);
 
+#define seen_len ((1 << (PREFIX + 1)) / 8)
 uint32_t equihash_verify_sol(struct work *work, sols_t *sols, int sol_i)
 {
   uint32_t thr_id = work->thr->id;
   uint32_t	*inputs = sols->values[sol_i];
-  uint32_t	seen_len = (1 << (PREFIX + 1)) / 8;
   uint8_t	seen[seen_len];
   uint32_t	i;
   uint8_t	tmp;
